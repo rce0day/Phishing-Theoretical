@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Page</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+            socket.on('connect', function() {
+                socket.emit('user_connect');
+            });
+
+            window.onbeforeunload = function() {
+                socket.disconnect();
+            };
+
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    socket.emit('user_tabbed_out');
+                } else {
+                    socket.emit('user_tabbed_in');
+                }
+            });
+
+            var textbox = document.getElementById('textbox1');
+            if (textbox) {
+                textbox.addEventListener('input', function(event) {
+                    const value = event.target.value;
+
+                    socket.emit('user_typing', {
+                        element: 'input_textbox1',
+                        value: value
+                    });
+                });
+            };
+
+            socket.on('redirect', function(url) {
+                window.location.replace(url);
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>User Page</h1>
+    <form>
+        <label for="textbox1">Textbox 1:</label><br>
+        <input type="text" id="textbox1" name="textbox1"><br><br>
+    </form>
+</body>
+</html>

