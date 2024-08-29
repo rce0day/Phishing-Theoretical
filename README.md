@@ -8,3 +8,6 @@ Live message input logging.
 User activity logging - Tabbed in / Tabbed out.
 
 Redirect functionality - redirect users to a second step page or to an external site.
+
+
+https://i.imgur.com/FHemGOY.mp4
