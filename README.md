@@ -10,4 +10,7 @@ User activity logging - Tabbed in / Tabbed out.
 Redirect functionality - redirect users to a second step page or to an external site.
 
 
-https://i.imgur.com/FHemGOY.mp4
+
+
+https://github.com/user-attachments/assets/d5577e27-8514-46f3-a7da-e39751fb94b9
+
